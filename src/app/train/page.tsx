@@ -12,6 +12,7 @@ import { buildAttempt, saveAttempt } from '@/lib/history';
 import InfoModal from '@/components/InfoModal';
 import Link from 'next/link';
 import positions from '@/lib/positions.json';
+import { sendGAEvent } from '@next/third-parties/google';
 
 type Phase = 'reveal' | 'vanish' | 'rebuild';
 
@@ -105,6 +106,10 @@ function TrainSession() {
         setScore(result);
         setReviewView('correct');
         setShowDetails(false);
+        sendGAEvent('event', 'position_checked', {
+            correct: result.correct,
+            total: result.totalPieces,
+        });
         const timeTakenMs = hiddenAt !== null ? Date.now() - hiddenAt : 0;
         saveAttempt(buildAttempt(result, fen, 'reconstruction', timeTakenMs, timeLimitMs));
     }

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Familjen_Grotesk, Public_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { GoogleAnalytics } from '@next/third-parties/google';
 
 const familjen = Familjen_Grotesk({
   variable: "--font-familjen",
@@ -32,6 +33,7 @@ export default function RootLayout({
       >
         {children}
       </body>
+      <GoogleAnalytics gaId="G-R7R8T90C26" />
     </html>
   );
 }
