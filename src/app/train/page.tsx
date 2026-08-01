@@ -19,7 +19,7 @@ const DEFAULT_REVEAL_MS = 5000;
 const VANISH_MS = 350;
 const WHITE_PIECES = ['wK', 'wQ', 'wR', 'wB', 'wN', 'wP'];
 const BLACK_PIECES = ['bK', 'bQ', 'bR', 'bB', 'bN', 'bP'];
-const BOARD_SIZE = 'min(88vw, 68vh, 620px)'; 
+const BOARD_SIZE = 'min(88vw, 68vh, 620px)';
 const STATUS_LABEL: Record<string, string> = {
     wrongPiece: 'Wrong piece',
     missing: 'Missing',
@@ -64,11 +64,10 @@ function TrainSession() {
     const [score, setScore] = useState<AttemptScore | null>(null);
     const [hiddenAt, setHiddenAt] = useState<number | null>(null);
     const [reviewView, setReviewView] = useState<'correct' | 'yours'>('correct');
+    const [showDetails, setShowDetails] = useState(false);
     const [infoOpen, setInfoOpen] = useState(false);
-    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
-        setMounted(true);
         setFen(pickPosition(pieceRange));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
@@ -105,6 +104,7 @@ function TrainSession() {
         const result = scoreAttempt(real, placedPieces);
         setScore(result);
         setReviewView('correct');
+        setShowDetails(false);
         const timeTakenMs = hiddenAt !== null ? Date.now() - hiddenAt : 0;
         saveAttempt(buildAttempt(result, fen, 'reconstruction', timeTakenMs, timeLimitMs));
     }
@@ -115,6 +115,7 @@ function TrainSession() {
         setSelectedPiece(null);
         setScore(null);
         setHiddenAt(null);
+        setShowDetails(false);
         setPhase('reveal');
     }
 
@@ -150,6 +151,8 @@ function TrainSession() {
                 ? 'Rebuild it from memory'
                 : '';
 
+    const hasErrors = score ? score.results.some((r) => r.status !== 'correct') : false;
+
     return (
         <main className="flex min-h-screen flex-col px-4 py-2">
             <header className="mx-auto mb-1 flex w-full max-w-6xl items-center justify-between gap-2">
@@ -179,7 +182,7 @@ function TrainSession() {
             </header>
 
             <div
-                className={`flex flex-1 flex-col items-center justify-center gap-4 ${score ? 'lg:flex-row lg:items-center lg:justify-center lg:gap-8' : ''
+                className={`flex flex-1 flex-col items-center justify-start gap-4 pt-2 lg:justify-center lg:pt-0 ${score ? 'lg:flex-row lg:items-center lg:gap-8' : ''
                     }`}
             >
                 <div className="flex flex-col items-center gap-2">
@@ -259,12 +262,12 @@ function TrainSession() {
                         </div>
                     </ChessboardProvider>
 
-                    <div className="flex min-h-[40px] gap-2">
+                    <div className="flex min-h-[40px] w-full justify-center gap-2" style={{ maxWidth: BOARD_SIZE }}>
                         {phase === 'rebuild' && !score && (
                             <>
                                 <button
                                     onClick={() => setSelectedPiece(null)}
-                                    className={`h-10 rounded-md px-4 font-mono text-sm transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brass ${selectedPiece === null
+                                    className={`h-10 w-32 cursor-pointer rounded-md font-mono text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brass ${selectedPiece === null
                                         ? 'bg-brass text-navy'
                                         : 'bg-surface text-parchment/80 hover:text-parchment'
                                         }`}
@@ -273,7 +276,7 @@ function TrainSession() {
                                 </button>
                                 <button
                                     onClick={handleCheck}
-                                    className="h-10 rounded-md bg-brass px-6 font-mono font-semibold text-navy transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
+                                    className="h-10 w-32 cursor-pointer rounded-md bg-brass font-mono font-semibold text-navy transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
                                 >
                                     Check
                                 </button>
@@ -283,34 +286,48 @@ function TrainSession() {
                 </div>
 
                 {score && (
-                    <div className="flex max-h-[80vh] w-full max-w-md flex-col rounded-lg bg-surface p-5 lg:w-80 lg:self-center">
+                    <div className="flex w-full max-w-md flex-col rounded-lg bg-surface p-5 lg:w-80">
                         <p className="font-display text-xl text-parchment">
                             <span className="text-brass">{score.correct}</span> of {score.totalPieces} correct
                         </p>
-                        {score.results.some((r) => r.status !== 'correct') && (
-                            <ul className="mt-3 flex-1 space-y-1 overflow-y-auto font-mono text-sm text-muted">
-                                {score.results
-                                    .filter((r) => r.status !== 'correct')
-                                    .map((r) => (
-                                        <li key={r.square}>
-                                            <span className="text-parchment">{r.square}</span> · {STATUS_LABEL[r.status]}
-                                            {r.status === 'wrongPiece' && ` (want ${r.expected}, got ${r.actual})`}
-                                            {r.status === 'missing' && ` (want ${r.expected})`}
-                                            {r.status === 'extra' && ` (got ${r.actual})`}
-                                        </li>
-                                    ))}
-                            </ul>
+
+                        {hasErrors && (
+                            <>
+                                <button
+                                    onClick={() => setShowDetails((v) => !v)}
+                                    className="mt-3 flex cursor-pointer items-center gap-1 self-start font-mono text-sm text-muted transition hover:text-parchment focus:outline-none"
+                                >
+                                    {showDetails ? 'Hide details' : 'Show details'}
+                                    <span className={`transition-transform ${showDetails ? 'rotate-180' : ''}`}>▾</span>
+                                </button>
+
+                                {showDetails && (
+                                    <ul className="mt-2 max-h-52 space-y-1 overflow-y-auto font-mono text-sm text-muted">
+                                        {score.results
+                                            .filter((r) => r.status !== 'correct')
+                                            .map((r) => (
+                                                <li key={r.square}>
+                                                    <span className="text-parchment">{r.square}</span> · {STATUS_LABEL[r.status]}
+                                                    {r.status === 'wrongPiece' && ` (want ${r.expected}, got ${r.actual})`}
+                                                    {r.status === 'missing' && ` (want ${r.expected})`}
+                                                    {r.status === 'extra' && ` (got ${r.actual})`}
+                                                </li>
+                                            ))}
+                                    </ul>
+                                )}
+                            </>
                         )}
+
                         <div className="mt-4 flex flex-wrap gap-2">
                             <button
                                 onClick={() => setReviewView((v) => (v === 'correct' ? 'yours' : 'correct'))}
-                                className="rounded-md border border-slate px-4 py-2 font-mono text-sm text-parchment transition hover:border-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
+                                className="flex-1 cursor-pointer rounded-md border border-slate px-4 py-2 font-mono text-sm text-parchment transition hover:border-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
                             >
                                 {reviewView === 'correct' ? 'Show your answer' : 'Show correct board'}
                             </button>
                             <button
                                 onClick={handleNext}
-                                className="rounded-md border border-brass px-5 py-2 font-mono text-brass transition hover:bg-brass hover:text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
+                                className="flex-1 cursor-pointer rounded-md border border-brass px-4 py-2 font-mono text-sm text-brass transition hover:bg-brass hover:text-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
                             >
                                 Next position
                             </button>
