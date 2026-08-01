@@ -207,7 +207,7 @@ function TrainSession() {
             </header>
 
             <div
-                className={`flex flex-1 flex-col items-center justify-start gap-3 pt-1 lg:justify-center lg:pt-0 ${score ? 'lg:flex-row lg:items-center lg:gap-8' : ''
+                className={`flex flex-1 flex-col items-center justify-start gap-1 pt-1 lg:justify-center lg:gap-8 lg:pt-0 ${score ? 'lg:flex-row lg:items-center' : ''
                     }`}
             >
                 <div className="flex flex-col items-center gap-2">
@@ -285,7 +285,7 @@ function TrainSession() {
                 </div>
 
                 {score && (
-                    <div className="flex w-full max-w-md flex-col rounded-lg bg-surface p-5 lg:w-80">
+                    <div className="mt-2 flex w-full max-w-md flex-col rounded-lg bg-surface p-5 lg:mt-0 lg:w-80">
                         <p className="font-display text-xl text-parchment">
                             <span className="text-brass">{score.correct}</span> of {score.totalPieces} correct
                         </p>
