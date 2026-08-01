@@ -160,8 +160,8 @@ function TrainSession() {
 
     const renderTray = (pieces: string[]) => (
         <div
-            className="flex flex-wrap justify-center gap-1 sm:gap-1.5"
-            style={{ maxWidth: BOARD_SIZE, minHeight: '48px' }}
+            className="flex w-full justify-center gap-2"
+            style={{ maxWidth: BOARD_SIZE, minHeight: phase === 'rebuild' && !score ? '40px' : '0' }}
         >
             {phase === 'rebuild' && !score &&
                 pieces.map((p) => (
