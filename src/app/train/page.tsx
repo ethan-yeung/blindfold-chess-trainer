@@ -158,6 +158,26 @@ function TrainSession() {
 
     const hasErrors = score ? score.results.some((r) => r.status !== 'correct') : false;
 
+    const renderTray = (pieces: string[]) => (
+        <div
+            className="flex flex-wrap justify-center gap-1 sm:gap-1.5"
+            style={{ maxWidth: BOARD_SIZE, minHeight: '48px' }}
+        >
+            {phase === 'rebuild' && !score &&
+                pieces.map((p) => (
+                    <div
+                        key={p}
+                        onPointerUp={() => setSelectedPiece(p)}
+                        aria-label={p}
+                        className={`flex aspect-square w-[15%] max-w-[64px] cursor-pointer items-center justify-center rounded-md bg-parchment p-0.5 ring-2 transition ${selectedPiece === p ? 'ring-brass' : 'ring-transparent hover:ring-brass/50'
+                            }`}
+                    >
+                        <SparePiece pieceType={p} />
+                    </div>
+                ))}
+        </div>
+    );
+
     return (
         <main className="flex min-h-screen flex-col px-4 py-2">
             <header className="mx-auto mb-1 flex w-full max-w-6xl items-center justify-between gap-2">
@@ -187,7 +207,7 @@ function TrainSession() {
             </header>
 
             <div
-                className={`flex flex-1 flex-col items-center justify-start gap-4 pt-2 lg:justify-center lg:pt-0 ${score ? 'lg:flex-row lg:items-center lg:gap-8' : ''
+                className={`flex flex-1 flex-col items-center justify-start gap-3 pt-1 lg:justify-center lg:pt-0 ${score ? 'lg:flex-row lg:items-center lg:gap-8' : ''
                     }`}
             >
                 <div className="flex flex-col items-center gap-2">
@@ -218,22 +238,9 @@ function TrainSession() {
                             boardStyle: { borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.35)' },
                         }}
                     >
-                        <div className="flex min-h-[64px] flex-wrap items-center justify-center gap-1.5">
-                            {phase === 'rebuild' && !score &&
-                                BLACK_PIECES.map((p) => (
-                                    <button
-                                        key={p}
-                                        onClick={() => setSelectedPiece(p)}
-                                        aria-label={p}
-                                        className={`flex h-16 w-16 items-center justify-center rounded-md bg-parchment p-1 ring-2 transition focus:outline-none focus-visible:ring-brass ${selectedPiece === p ? 'ring-brass' : 'ring-transparent hover:ring-brass/50'
-                                            }`}
-                                    >
-                                        <SparePiece pieceType={p} />
-                                    </button>
-                                ))}
-                        </div>
+                        {renderTray(BLACK_PIECES)}
 
-                        <div className="relative" style={{ width: BOARD_SIZE }}>
+                        <div className="relative my-2" style={{ width: BOARD_SIZE }}>
                             <Chessboard />
                             <div
                                 aria-hidden
@@ -244,27 +251,14 @@ function TrainSession() {
                             {phase === 'reveal' && timeLimitMs === null && (
                                 <button
                                     onClick={() => setPhase('vanish')}
-                                    className="absolute -bottom-14 left-1/2 -translate-x-1/2 cursor-pointer rounded-md bg-brass px-6 py-2 font-mono font-semibold text-navy transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
+                                    className="absolute -bottom-12 left-1/2 -translate-x-1/2 cursor-pointer rounded-md bg-brass px-6 py-2 font-mono font-semibold text-navy transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
                                 >
                                     Hide board
                                 </button>
                             )}
                         </div>
 
-                        <div className="flex min-h-[64px] flex-wrap items-center justify-center gap-1.5">
-                            {phase === 'rebuild' && !score &&
-                                WHITE_PIECES.map((p) => (
-                                    <button
-                                        key={p}
-                                        onClick={() => setSelectedPiece(p)}
-                                        aria-label={p}
-                                        className={`flex h-16 w-16 items-center justify-center rounded-md bg-parchment p-1 ring-2 transition focus:outline-none focus-visible:ring-brass ${selectedPiece === p ? 'ring-brass' : 'ring-transparent hover:ring-brass/50'
-                                            }`}
-                                    >
-                                        <SparePiece pieceType={p} />
-                                    </button>
-                                ))}
-                        </div>
+                        {renderTray(WHITE_PIECES)}
                     </ChessboardProvider>
 
                     <div className="flex min-h-[40px] w-full justify-center gap-2" style={{ maxWidth: BOARD_SIZE }}>

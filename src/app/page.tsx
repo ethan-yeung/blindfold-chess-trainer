@@ -28,7 +28,7 @@ export default function HomePage() {
 
     return (
         <main
-            className={`flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center ${leaving ? 'animate-leave' : ''
+            className={`flex min-h-screen flex-col items-center justify-center px-6 py-10 text-center ${leaving ? 'animate-leave' : ''
                 }`}
         >
             <h1
@@ -56,12 +56,12 @@ export default function HomePage() {
                             <button
                                 key={limit ?? 'unlimited'}
                                 onClick={() => setTimeLimit(limit)}
-                                className={`cursor-pointer rounded-md px-3 py-2 font-mono text-sm transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment ${selected
+                                className={`cursor-pointer rounded-md px-2 py-2 font-mono text-xs transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment ${selected
                                     ? 'bg-brass text-navy ring-2 ring-parchment/70 ring-offset-2 ring-offset-navy'
                                     : 'bg-surface text-parchment/80 hover:text-parchment hover:ring-2 hover:ring-brass/50'
                                     }`}
                             >
-                                {limit === null ? 'Unlimited' : `${limit}s`}
+                                {limit === null ? 'Endless' : `${limit}s`}
                             </button>
                         );
                     })}
@@ -121,7 +121,7 @@ export default function HomePage() {
 
             <button
                 onClick={handleStart}
-                className="animate-rise mt-12 cursor-pointer rounded-md bg-brass px-8 py-3 font-mono font-semibold text-navy transition duration-200 hover:shadow-lg hover:shadow-brass/20 hover:ring-2 hover:ring-brass/60 hover:ring-offset-2 hover:ring-offset-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
+                className="animate-rise mt-10 cursor-pointer rounded-md bg-brass px-8 py-3 font-mono font-semibold text-navy transition duration-200 hover:shadow-lg hover:shadow-brass/20 hover:ring-2 hover:ring-brass/60 hover:ring-offset-2 hover:ring-offset-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
                 style={{ animationDelay: '200ms' }}
             >
                 Start training
