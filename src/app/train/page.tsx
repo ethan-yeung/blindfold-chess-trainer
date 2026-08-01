@@ -285,7 +285,7 @@ function TrainSession() {
                 </div>
 
                 {score && (
-                    <div className="mt-2 flex w-full max-w-md flex-col rounded-lg bg-surface p-5 lg:mt-0 lg:w-80">
+                    <div className="mt-0 flex w-full max-w-md flex-col rounded-lg bg-surface p-5 lg:mt-0 lg:w-80">
                         <p className="font-display text-xl text-parchment">
                             <span className="text-brass">{score.correct}</span> of {score.totalPieces} correct
                         </p>
