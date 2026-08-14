@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
+import Link from 'next/link';
 
 const TIME_LIMITS = [3, 5, 10, 15, 30, 45, 60, null];
 
@@ -14,6 +15,8 @@ export default function HomePage() {
     const [rangeMode, setRangeMode] = useState(false);
     const [single, setSingle] = useState(14);
     const [range, setRange] = useState<[number, number]>([9, 18]);
+    const [orientation, setOrientation] = useState<'white' | 'black'>('white');
+    
 
     function handleStart() {
         const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -21,7 +24,7 @@ export default function HomePage() {
         const rangeParam = rangeMode ? `${range[0]}-${range[1]}` : `${single}-${single}`;
         setLeaving(true);
         setTimeout(
-            () => router.push(`/train?limit=${limitParam}&range=${rangeParam}`),
+            () => router.push(`/train?limit=${limitParam}&range=${rangeParam}&orientation=${orientation}`),
             reduce ? 0 : 400,
         );
     }
@@ -73,17 +76,21 @@ export default function HomePage() {
                     <p className="font-mono text-xs uppercase tracking-[0.2em] text-parchment">
                         Pieces
                     </p>
-                    <div className="flex gap-1">
+                    <div className="flex gap-2">
                         <button
                             onClick={() => setRangeMode(false)}
-                            className={`cursor-pointer rounded px-3 py-1 font-mono text-xs transition ${!rangeMode ? 'bg-brass text-navy' : 'bg-surface text-parchment/80 hover:text-parchment'
+                            className={`flex-1 cursor-pointer rounded-md px-3 py-2 font-mono text-xs transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment ${!rangeMode
+                                ? 'bg-brass text-navy ring-2 ring-parchment/70 ring-offset-2 ring-offset-navy'
+                                : 'bg-surface text-parchment/80 hover:text-parchment hover:ring-2 hover:ring-brass/50'
                                 }`}
                         >
                             Single
                         </button>
                         <button
                             onClick={() => setRangeMode(true)}
-                            className={`cursor-pointer rounded px-3 py-1 font-mono text-xs transition ${rangeMode ? 'bg-brass text-navy' : 'bg-surface text-parchment/80 hover:text-parchment'
+                            className={`flex-1 cursor-pointer rounded-md px-3 py-2 font-mono text-xs transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment ${rangeMode
+                                ? 'bg-brass text-navy ring-2 ring-parchment/70 ring-offset-2 ring-offset-navy'
+                                : 'bg-surface text-parchment/80 hover:text-parchment hover:ring-2 hover:ring-brass/50'
                                 }`}
                         >
                             Range
@@ -119,13 +126,48 @@ export default function HomePage() {
                 </p>
             </div>
 
+            <div className="animate-rise mt-8 w-full max-w-md" style={{ animationDelay: '190ms' }}>
+                <p className="mb-3 font-mono text-xs uppercase tracking-[0.2em] text-parchment">
+                    Perspective
+                </p>
+                <div className="flex gap-2">
+                    <button
+                        onClick={() => setOrientation('white')}
+                        className={`flex-1 cursor-pointer rounded-md px-3 py-2 font-mono text-xs transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment ${orientation === 'white'
+                            ? 'bg-brass text-navy ring-2 ring-parchment/70 ring-offset-2 ring-offset-navy'
+                            : 'bg-surface text-parchment/80 hover:text-parchment hover:ring-2 hover:ring-brass/50'
+                            }`}
+                    >
+                        White
+                    </button>
+                    <button
+                        onClick={() => setOrientation('black')}
+                        className={`flex-1 cursor-pointer rounded-md px-3 py-2 font-mono text-xs transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment ${orientation === 'black'
+                                ? 'bg-brass text-navy ring-2 ring-parchment/70 ring-offset-2 ring-offset-navy'
+                                : 'bg-surface text-parchment/80 hover:text-parchment hover:ring-2 hover:ring-brass/50'
+                            }`}
+                    >
+                        Black
+                    </button>
+                </div>
+            </div>
+
             <button
                 onClick={handleStart}
-                className="animate-rise mt-10 cursor-pointer rounded-md bg-brass px-8 py-3 font-mono font-semibold text-navy transition duration-200 hover:shadow-lg hover:shadow-brass/20 hover:ring-2 hover:ring-brass/60 hover:ring-offset-2 hover:ring-offset-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
+                className="animate-rise mt-10 flex h-12 w-full max-w-xs cursor-pointer items-center justify-center rounded-md bg-brass px-8 font-mono font-semibold text-navy transition duration-200 hover:shadow-lg hover:shadow-brass/20 hover:ring-2 hover:ring-brass/60 hover:ring-offset-2 hover:ring-offset-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
                 style={{ animationDelay: '200ms' }}
             >
                 Start training
             </button>
+
+            <Link
+                href="/stats"
+                className="animate-rise mt-4 inline-flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-md border border-slate bg-surface px-6 font-mono text-sm text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
+                style={{ animationDelay: '240ms' }}
+            >
+                Stats
+            </Link>
+
         </main>
     );
 }

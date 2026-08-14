@@ -14,6 +14,7 @@ import Link from 'next/link';
 import positions from '@/lib/positions.json';
 import { sendGAEvent } from '@next/third-parties/google';
 
+
 type Phase = 'reveal' | 'vanish' | 'rebuild';
 
 const DEFAULT_REVEAL_MS = 5000;
@@ -26,6 +27,7 @@ const STATUS_LABEL: Record<string, string> = {
     missing: 'Missing',
     extra: 'Extra',
 };
+
 
 function parseRange(raw: string | null): [number, number] | null {
     if (!raw) return null;
@@ -67,6 +69,12 @@ function TrainSession() {
     const [reviewView, setReviewView] = useState<'correct' | 'yours'>('correct');
     const [showDetails, setShowDetails] = useState(false);
     const [infoOpen, setInfoOpen] = useState(false);
+
+    const orientationParam = searchParams.get('orientation') === 'black' ? 'black' : 'white';
+    const [orientation, setOrientation] = useState<'white' | 'black'>(orientationParam);
+
+    const [turns, setTurns] = useState(0);
+    const [flipping, setFlipping] = useState(false);
 
     useEffect(() => {
         setFen(pickPosition(pieceRange));
@@ -191,11 +199,28 @@ function TrainSession() {
                     </Link>
                 </div>
 
+
                 <h1 className="font-display text-xl font-semibold tracking-tight text-parchment sm:text-2xl">
                     Blindfold Trainer
                 </h1>
 
-                <div className="flex flex-1 justify-end">
+
+                <div className="flex flex-1 justify-end gap-2">
+                    <button
+                        onClick={() => {
+                            setFlipping(true);
+                            setTurns((t) => t + 1);
+                            setTimeout(() => {
+                                setOrientation((o) => (o === 'white' ? 'black' : 'white'));
+                                setFlipping(false);
+                            }, 200);
+                        }}
+                        aria-label="Flip board"
+
+                        className="flex h-11 w-11 items-center justify-center rounded-md border border-slate bg-surface font-mono text-lg text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
+                    >
+                        <span className="inline-block transition-transform duration-500" style={{ transform: `rotate(${turns * 180}deg)` }}>⟳</span>
+                    </button>
                     <button
                         onClick={() => setInfoOpen(true)}
                         aria-label="How it works"
@@ -217,6 +242,7 @@ function TrainSession() {
                         options={{
                             id: 'train-board',
                             position: displayPosition,
+                            boardOrientation: orientation,
                             onSquareClick: handleSquareClick,
                             onPieceDrop: ({ sourceSquare, targetSquare, piece }) => {
                                 if (phase !== 'rebuild' || score) return false;
@@ -238,9 +264,12 @@ function TrainSession() {
                             boardStyle: { borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.35)' },
                         }}
                     >
-                        {renderTray(BLACK_PIECES)}
+                        {renderTray(orientation === 'white' ? WHITE_PIECES : BLACK_PIECES)}
 
-                        <div className="relative my-2" style={{ width: BOARD_SIZE }}>
+                        <div
+                            className={`relative my-2 transition-opacity duration-200 ${flipping ? 'opacity-0' : 'opacity-100'}`}
+                            style={{ width: BOARD_SIZE }}
+                        >
                             <Chessboard />
                             <div
                                 aria-hidden
@@ -258,7 +287,7 @@ function TrainSession() {
                             )}
                         </div>
 
-                        {renderTray(WHITE_PIECES)}
+                        {renderTray(orientation === 'white' ? BLACK_PIECES : WHITE_PIECES)}
                     </ChessboardProvider>
 
                     <div className="flex min-h-[40px] w-full justify-center gap-2" style={{ maxWidth: BOARD_SIZE }}>
@@ -331,6 +360,14 @@ function TrainSession() {
                                 Next position
                             </button>
                         </div>
+
+                        <Link
+                            href="/stats"
+                            className="mt-2 flex h-11 items-center justify-center gap-2 rounded-md border border-slate bg-surface px-4 font-mono text-sm text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
+                        >
+                            View stats
+                        </Link>
+
                     </div>
                 )}
             </div>

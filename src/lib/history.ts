@@ -71,3 +71,8 @@ export function saveAttempt(attempt: Attempt): void {
   all.push(attempt);
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(all));
 }
+
+export function clearAttempts(): void {
+  if (typeof window === 'undefined') return;
+  window.localStorage.removeItem(STORAGE_KEY);
+}
