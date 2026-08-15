@@ -11,6 +11,7 @@ import {
     accuracyBySquare,
 } from '../lib/stats';
 import { createPortal } from 'react-dom';
+import Modal from './Modal';
 
 const SIDE_ORDER = [
     { key: 'queenside', label: 'Queenside' },
@@ -79,46 +80,16 @@ function barsFrom(order: { key: string; label: string }[], data: Map<string, num
 }
 
 function HeatmapInfo({ open, onClose }: { open: boolean; onClose: () => void }) {
-    useEffect(() => {
-        if (!open) return;
-        const onKey = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') onClose();
-        };
-        window.addEventListener('keydown', onKey);
-        return () => window.removeEventListener('keydown', onKey);
-    }, [open, onClose]);
-
-    return createPortal(
-        <div
-            aria-hidden={!open}
-            className={`fixed inset-0 z-50 flex items-end justify-center p-0 transition-opacity duration-200 sm:items-center sm:p-4 ${open ? 'opacity-100' : 'pointer-events-none opacity-0'
-                }`}
-        >
-            <div className="absolute inset-0 bg-navy/70 backdrop-blur-sm" onClick={onClose} />
-
-            <div
-                role="dialog"
-                aria-modal="true"
-                aria-labelledby="stats-info-title"
-                className={`relative z-10 max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-2xl border border-slate bg-surface p-6 shadow-xl transition-all duration-200 sm:rounded-xl ${open
-                        ? 'translate-y-0 scale-100 opacity-100'
-                        : 'translate-y-4 scale-95 opacity-0 sm:translate-y-3'
-                    }`}
-            >
-                <div className="flex items-center justify-between">
-                    <h2 id="stats-info-title" className="font-display text-xl text-parchment">How to read your stats</h2>
-                    <button onClick={onClose} aria-label="Close" className="font-mono text-lg text-muted transition hover:text-brass">✕</button>
-                </div>
-                <div className="mt-4 space-y-4 text-sm text-muted">
-                    <p><span className="text-parchment">The numbers represent your accuracy</span> It records whether you obtained the right square with the right piece.</p>
-                    <p><span className="text-parchment">Per-square heatmap.</span> Each square is colored by how often you place its piece correctly: <span style={{ color: '#6e8b5b' }}>green</span> is strong, <span style={{ color: '#c9a15a' }}>gold</span> mid, <span style={{ color: '#b5533c' }}>red</span> weak. Squares with fewer than {MIN_ATTEMPTS} attempts stay grey. Empty squares are ones no piece has occupied yet in your positions.</p>
-                    <p><span className="text-parchment">Flip</span> rotates the board to Black&apos;s perspective. The data doesn&apos;t change — only the side you view it from.</p>
-                    <p><span className="text-parchment">The bars</span> display the same accuracy, separated by where on the board, which piece, how many pieces were showing, and your time limits, so you can spot exactly where your memory drops off.</p>
-                    <p className="text-xs">Every figure is computed from your own logged attempts. The reset button clears them all.</p>
-                </div>
+    return (
+        <Modal open={open} onClose={onClose} title="How to read your stats">
+            <div className="space-y-4 text-sm text-muted">
+                <p><span className="text-parchment">The numbers represent your accuracy.</span> It records whether you obtained the right square with the right piece.</p>
+                <p><span className="text-parchment">Per-square heatmap.</span> Each square is colored by how often you place its piece correctly: <span style={{ color: '#6e8b5b' }}>green</span> is strong, <span style={{ color: '#c9a15a' }}>gold</span> mid, <span style={{ color: '#b5533c' }}>red</span> weak. Squares with fewer than {MIN_ATTEMPTS} attempts stay grey. Empty squares are ones no piece has occupied yet in your positions.</p>
+                <p><span className="text-parchment">Flip</span> rotates the board to Black&apos;s perspective. The data doesn&apos;t change — only the side you view it from.</p>
+                <p><span className="text-parchment">The bars</span> display the same accuracy, separated by where on the board, which piece, how many pieces were showing, and your time limits, so you can spot exactly where your memory drops off.</p>
+                <p className="text-xs">Every figure is computed from your own logged attempts. The reset button clears them all.</p>
             </div>
-        </div>,
-        document.body
+        </Modal>
     );
 }
 
