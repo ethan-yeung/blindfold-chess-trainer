@@ -264,7 +264,7 @@ function TrainSession() {
                             boardStyle: { borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.35)' },
                         }}
                     >
-                        {renderTray(orientation === 'white' ? WHITE_PIECES : BLACK_PIECES)}
+                        {renderTray(orientation === 'white' ? BLACK_PIECES : WHITE_PIECES)}
 
                         <div
                             className={`relative my-2 transition-opacity duration-200 ${flipping ? 'opacity-0' : 'opacity-100'}`}
@@ -287,7 +287,7 @@ function TrainSession() {
                             )}
                         </div>
 
-                        {renderTray(orientation === 'white' ? BLACK_PIECES : WHITE_PIECES)}
+                        {renderTray(orientation === 'white' ? WHITE_PIECES : BLACK_PIECES)}
                     </ChessboardProvider>
 
                     <div className="flex min-h-[40px] w-full justify-center gap-2" style={{ maxWidth: BOARD_SIZE }}>
