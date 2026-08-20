@@ -235,7 +235,7 @@ function TrainSession() {
                 className={`flex flex-1 flex-col items-center justify-start gap-1 pt-1 lg:justify-center lg:gap-8 lg:pt-0 ${score ? 'lg:flex-row lg:items-center' : ''
                     }`}
             >
-                <div className="flex flex-col items-center gap-2">
+                <div className="animate-rise flex flex-col items-center gap-2">
                     <p className="min-h-[20px] font-mono text-sm text-muted">{statusText}</p>
 
                     <ChessboardProvider

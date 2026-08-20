@@ -37,7 +37,7 @@ body {
 }
 
 .animate-rise {
-  animation: rise-in 0.75s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation: rise-in 0.75s cubic-bezier(0.16, 1, 0.3, 0.8) both;
 }
 
 @media (prefers-reduced-motion: reduce) {

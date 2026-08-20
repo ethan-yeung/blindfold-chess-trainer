@@ -16,17 +16,12 @@ export default function HomePage() {
     const [single, setSingle] = useState(14);
     const [range, setRange] = useState<[number, number]>([9, 18]);
     const [orientation, setOrientation] = useState<'white' | 'black'>('white');
-    
 
-    function handleStart() {
-        const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+     function handleStart() {
         const limitParam = timeLimit === null ? 'unlimited' : String(timeLimit);
         const rangeParam = rangeMode ? `${range[0]}-${range[1]}` : `${single}-${single}`;
-        setLeaving(true);
-        setTimeout(
-            () => router.push(`/train?limit=${limitParam}&range=${rangeParam}&orientation=${orientation}`),
-            reduce ? 0 : 400,
-        );
+        router.push(`/train?limit=${limitParam}&range=${rangeParam}&orientation=${orientation}`);
     }
 
     return (
@@ -143,8 +138,8 @@ export default function HomePage() {
                     <button
                         onClick={() => setOrientation('black')}
                         className={`flex-1 cursor-pointer rounded-md px-3 py-2 font-mono text-xs transition duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment ${orientation === 'black'
-                                ? 'bg-brass text-navy ring-2 ring-parchment/70 ring-offset-2 ring-offset-navy'
-                                : 'bg-surface text-parchment/80 hover:text-parchment hover:ring-2 hover:ring-brass/50'
+                            ? 'bg-brass text-navy ring-2 ring-parchment/70 ring-offset-2 ring-offset-navy'
+                            : 'bg-surface text-parchment/80 hover:text-parchment hover:ring-2 hover:ring-brass/50'
                             }`}
                     >
                         Black
@@ -159,6 +154,14 @@ export default function HomePage() {
             >
                 Start training
             </button>
+
+            <Link
+                href="/recall/setup"
+                className="animate-rise mt-4 inline-flex h-12 w-full max-w-xs items-center justify-center gap-2 rounded-md border border-slate bg-surface px-6 font-mono text-sm text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
+                style={{ animationDelay: '220ms' }}
+            >
+                Move recall
+            </Link>
 
             <Link
                 href="/stats"
