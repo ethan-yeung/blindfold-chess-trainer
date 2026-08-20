@@ -13,15 +13,17 @@ import InfoModal from '@/components/InfoModal';
 import Link from 'next/link';
 import positions from '@/lib/positions.json';
 import { sendGAEvent } from '@next/third-parties/google';
+import CircularTimer from '@/components/CircularTimer';
 
 
 type Phase = 'reveal' | 'vanish' | 'rebuild';
 
 const DEFAULT_REVEAL_MS = 5000;
 const VANISH_MS = 350;
+const TICK_MS = 100;
 const WHITE_PIECES = ['wK', 'wQ', 'wR', 'wB', 'wN', 'wP'];
 const BLACK_PIECES = ['bK', 'bQ', 'bR', 'bB', 'bN', 'bP'];
-const BOARD_SIZE = 'min(88vw, 68vh, 620px)';
+const BOARD_SIZE = 'min(88vw, 65vh, 620px)';
 const STATUS_LABEL: Record<string, string> = {
     wrongPiece: 'Wrong piece',
     missing: 'Missing',
@@ -75,25 +77,45 @@ function TrainSession() {
 
     const [turns, setTurns] = useState(0);
     const [flipping, setFlipping] = useState(false);
+    const [revealRemaining, setRevealRemaining] = useState(revealMs / 1000);
+    const [timerSize, setTimerSize] = useState(44);
 
     useEffect(() => {
         setFen(pickPosition(pieceRange));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+
     }, []);
 
+
     useEffect(() => {
-        if (phase === 'reveal' && timeLimitMs !== null) {
-            const t = setTimeout(() => setPhase('vanish'), revealMs);
-            return () => clearTimeout(t);
+        if (phase !== 'reveal' || timeLimitMs === null) return;
+        const id = setInterval(() => {
+            setRevealRemaining((r) => Math.max(0, r - TICK_MS / 1000));
+        }, TICK_MS);
+        return () => clearInterval(id);
+    }, [phase, timeLimitMs]);
+
+    useEffect(() => {
+        if (phase === 'reveal' && timeLimitMs !== null && revealRemaining <= 0) {
+            setPhase('vanish');
         }
-        if (phase === 'vanish') {
-            const t = setTimeout(() => {
-                setPhase('rebuild');
-                setHiddenAt(Date.now());
-            }, VANISH_MS);
-            return () => clearTimeout(t);
-        }
-    }, [phase, revealMs, timeLimitMs]);
+    }, [revealRemaining, phase, timeLimitMs]);
+
+
+    useEffect(() => {
+        if (phase !== 'vanish') return;
+        const t = setTimeout(() => {
+            setPhase('rebuild');
+            setHiddenAt(Date.now());
+        }, VANISH_MS);
+        return () => clearTimeout(t);
+    }, [phase]);
+
+    useEffect(() => {
+        const update = () => setTimerSize(window.innerWidth < 640 ? 36 : 52);
+        update();
+        window.addEventListener('resize', update);
+        return () => window.removeEventListener('resize', update);
+    }, []);
 
     function handleSquareClick({ square }: SquareHandlerArgs) {
         if (phase !== 'rebuild' || score) return;
@@ -130,6 +152,7 @@ function TrainSession() {
         setHiddenAt(null);
         setShowDetails(false);
         setPhase('reveal');
+        setRevealRemaining(revealMs / 1000);
     }
 
     const boardPosition: PositionDataType = Object.fromEntries(
@@ -235,8 +258,25 @@ function TrainSession() {
                 className={`flex flex-1 flex-col items-center justify-start gap-1 pt-1 lg:justify-center lg:gap-8 lg:pt-0 ${score ? 'lg:flex-row lg:items-center' : ''
                     }`}
             >
-                <div className="animate-rise flex flex-col items-center gap-2">
-                    <p className="min-h-[20px] font-mono text-sm text-muted">{statusText}</p>
+                <div className="animate-rise flex flex-col items-center gap-1">
+                    <div
+                        className="grid w-full grid-cols-[1fr_auto_1fr] items-center"
+                        style={{ maxWidth: BOARD_SIZE, minHeight: timerSize + 8 }}
+                    >
+                        <div className="flex justify-start">
+                            {phase === 'reveal' && timeLimitMs !== null && (
+                                <div className="rounded-full p-1" style={{ backgroundColor: 'rgba(13,27,42,0.55)' }}>
+                                    <CircularTimer
+                                        remaining={revealRemaining}
+                                        total={revealMs / 1000}
+                                        size={timerSize}
+                                    />
+                                </div>
+                            )}
+                        </div>
+                        <p className="font-mono text-sm text-muted">{statusText}</p>
+                        <div />
+                    </div>
 
                     <ChessboardProvider
                         options={{
@@ -267,7 +307,7 @@ function TrainSession() {
                         {renderTray(orientation === 'white' ? BLACK_PIECES : WHITE_PIECES)}
 
                         <div
-                            className={`relative my-2 transition-opacity duration-200 ${flipping ? 'opacity-0' : 'opacity-100'}`}
+                            className={`relative my-1 transition-opacity duration-200 ${flipping ? 'opacity-0' : 'opacity-100'}`}
                             style={{ width: BOARD_SIZE }}
                         >
                             <Chessboard />

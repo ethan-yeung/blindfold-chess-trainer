@@ -74,13 +74,20 @@ function RecallSession() {
     const mode = searchParams.get('mode') === 'hard' ? 'hard' : 'casual';
     const tierParam = searchParams.get('tier');
     const tier = TIER_NAMES.includes(tierParam ?? '') ? (tierParam as string) : 'Medium';
+
     const studyParam = searchParams.get('study');
-    const studyUnlimited = studyParam === 'unlimited';
-    const studySeconds = studyUnlimited ? 0 : Number(studyParam) || 15;
+    const studyEndless = studyParam === 'endless';
+    const studySeconds = studyEndless ? 0 : Number(studyParam) || 15;
+
+    const permoveParam = searchParams.get('permove');
+    const permoveEndless = permoveParam === null || permoveParam === 'endless';
+    const permoveSeconds = permoveEndless ? 0 : Number(permoveParam) || 0;
+
+    const orientation = searchParams.get('orientation') === 'black' ? 'black' : 'white';
+
     const poolRef = useRef<PoolGame[] | null>(null);
     const [game, setGame] = useState<BuiltGame | null>(null);
     const [status, setStatus] = useState<'loading' | 'ready' | 'error'>('loading');
-
 
     const [phase, setPhase] = useState<'study' | 'recall'>('study');
     const [ply, setPly] = useState(0);
@@ -92,9 +99,10 @@ function RecallSession() {
     const [infoOpen, setInfoOpen] = useState(false);
     const [hintStage, setHintStage] = useState<0 | 1 | 2>(0);
     const [studyRemaining, setStudyRemaining] = useState(studySeconds);
+    const [moveRemaining, setMoveRemaining] = useState(permoveSeconds);
+    const [timedOut, setTimedOut] = useState(false);
     const studyStarted = useRef(false);
     const [timerSize, setTimerSize] = useState(44);
-
 
     useEffect(() => {
         const update = () => setTimerSize(window.innerWidth < 640 ? 36 : 52);
@@ -104,6 +112,7 @@ function RecallSession() {
     }, []);
 
     const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const pulseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
     const moveLog = useRef<RecallMoveRecord[]>([]);
     const wrongOnCurrent = useRef(0);
     const logged = useRef(false);
@@ -182,13 +191,47 @@ function RecallSession() {
         }
     }, [recallDone, mode, headers.White, headers.Black]);
 
+    // --- study countdown: ticks once, initial study only ---
     useEffect(() => {
-        if (studyUnlimited || status !== 'ready' || phase !== 'study' || studyStarted.current) return;
+        if (studyEndless || status !== 'ready' || phase !== 'study' || studyStarted.current) return;
         const id = setInterval(() => {
             setStudyRemaining((r) => Math.max(0, r - TICK_MS / 1000));
         }, TICK_MS);
         return () => clearInterval(id);
-    }, [status, phase, studyUnlimited]);
+    }, [status, phase, studyEndless]);
+
+    useEffect(() => {
+        if (!studyEndless && status === 'ready' && phase === 'study' && !studyStarted.current && studyRemaining <= 0) {
+            startRecall();
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [studyRemaining, status, phase, studyEndless]);
+
+    // --- per-move countdown: runs during recall, resets each move ---
+    useEffect(() => {
+        if (permoveEndless || status !== 'ready' || phase !== 'recall' || recallDone || pendingPromotion) return;
+        const id = setInterval(() => {
+            setMoveRemaining((r) => Math.max(0, r - TICK_MS / 1000));
+        }, TICK_MS);
+        return () => clearInterval(id);
+    }, [status, phase, recallDone, permoveEndless, pendingPromotion]);
+
+    // reset the per-move clock whenever we land on a new move
+    useEffect(() => {
+        if (permoveEndless) return;
+        setMoveRemaining(permoveSeconds);
+    }, [recallPly, permoveEndless, permoveSeconds]);
+
+    // per-move timeout: costs first-try credit, pulses rust, clock restarts
+    useEffect(() => {
+        if (permoveEndless || status !== 'ready' || phase !== 'recall' || recallDone) return;
+        if (moveRemaining > 0) return;
+        wrongOnCurrent.current += 1;
+        setTimedOut(true);
+        if (pulseTimer.current) clearTimeout(pulseTimer.current);
+        pulseTimer.current = setTimeout(() => setTimedOut(false), 600);
+        setMoveRemaining(permoveSeconds);
+    }, [moveRemaining, status, phase, recallDone, permoveEndless, permoveSeconds]);
 
     function flashSquare(square: string, kind: 'right' | 'wrong') {
         if (flashTimer.current) clearTimeout(flashTimer.current);
@@ -255,6 +298,8 @@ function RecallSession() {
         setPendingPromotion(null);
         setResult(null);
         setHintStage(0);
+        setMoveRemaining(permoveSeconds);
+        setTimedOut(false);
         moveLog.current = [];
         wrongOnCurrent.current = 0;
         logged.current = false;
@@ -294,27 +339,15 @@ function RecallSession() {
         setHintStage((s) => (s < 2 ? ((s + 1) as 0 | 1 | 2) : 2));
     }
 
-    useEffect(() => {
-        if (status !== 'ready' || phase !== 'study' || studyStarted.current) return;
-        const id = setInterval(() => {
-            setStudyRemaining((r) => Math.max(0, r - TICK_MS / 1000));
-        }, TICK_MS);
-        return () => clearInterval(id);
-    }, [status, phase]);
-
-    useEffect(() => {
-        if (status === 'ready' && phase === 'study' && !studyStarted.current && studyRemaining <= 0) {
-            startRecall();
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [studyRemaining, status, phase]);
-
     const moveNumber = Math.ceil(ply / 2);
     const lastMove = ply > 0 ? sans[ply - 1] : null;
     const sideToMove = recallPly % 2 === 0 ? 'White' : 'Black';
     const promoColor = recallPly % 2 === 0 ? 'w' : 'b';
     const boardPosition = phase === 'study' ? fens[ply] : fens[recallPly];
-    const showStudyTimer = !studyUnlimited && phase === 'study' && !studyStarted.current;
+
+    const showStudyTimer = !studyEndless && phase === 'study' && !studyStarted.current;
+    const showMoveTimer = !permoveEndless && phase === 'recall' && !recallDone;
+    const showTimer = showStudyTimer || showMoveTimer;
 
     const squareStyles: Record<string, CSSProperties> = { ...flash };
     if (selected) {
@@ -398,16 +431,20 @@ function RecallSession() {
                 className={`flex flex-1 flex-col items-center justify-start gap-2 pt-2 lg:pt-0 ${recallDone ? 'lg:flex-row lg:items-center lg:justify-center lg:gap-8' : 'lg:justify-center'
                     }`}
             >
-                <div className="animate-rise flex flex-col items-center gap-2">
+                <div className="animate-rise flex flex-col items-center gap-1">
 
                     <div
                         className="grid w-full grid-cols-[1fr_auto_1fr] items-center"
                         style={{ maxWidth: BOARD_SIZE, minHeight: timerSize + 8 }}
                     >
                         <div className="flex justify-start">
-                            {showStudyTimer && (
+                            {showTimer && (
                                 <div className="rounded-full p-1" style={{ backgroundColor: 'rgba(13,27,42,0.55)' }}>
-                                    <CircularTimer remaining={studyRemaining} total={studySeconds} size={timerSize} />
+                                    <CircularTimer
+                                        remaining={showStudyTimer ? studyRemaining : moveRemaining}
+                                        total={showStudyTimer ? studySeconds : permoveSeconds}
+                                        size={timerSize}
+                                    />
                                 </div>
                             )}
                         </div>
@@ -426,7 +463,7 @@ function RecallSession() {
                         options={{
                             id: 'recall-board',
                             position: boardPosition,
-                            boardOrientation: 'white',
+                            boardOrientation: orientation,
                             allowDragging: phase === 'recall' && !recallDone,
                             showAnimations: true,
                             animationDurationInMs: 200,
@@ -460,7 +497,13 @@ function RecallSession() {
                             boardStyle: { borderRadius: '4px', boxShadow: '0 10px 30px rgba(0,0,0,0.35)' },
                         }}
                     >
-                        <div className="relative my-2" style={{ width: BOARD_SIZE }}>
+                        <div
+                            className="relative my-1 rounded transition-shadow duration-200"
+                            style={{
+                                width: BOARD_SIZE,
+                                boxShadow: timedOut ? '0 0 0 4px rgba(181,83,60,0.85)' : '0 0 0 0 rgba(181,83,60,0)',
+                            }}
+                        >
                             <Chessboard />
                             {pendingPromotion && (
                                 <div
@@ -490,83 +533,88 @@ function RecallSession() {
                             )}
                         </div>
                     </ChessboardProvider>
-
-                    {!recallDone && phase === 'study' && (
-                        <>
-                            <div
-                                className="flex w-full items-center justify-between font-mono text-sm text-muted"
-                                style={{ maxWidth: BOARD_SIZE }}
-                            >
-                                <span>{atStart ? 'start' : `move ${moveNumber} · ${lastMove}`}</span>
-                                <span>{ply} / {fens.length - 1}</span>
-                            </div>
-
-                            <div className="flex w-full gap-3" style={{ maxWidth: BOARD_SIZE }}>
-                                <button
-                                    onClick={goPrev}
-                                    disabled={atStart}
-                                    className="flex h-12 flex-1 items-center justify-center rounded-md border border-slate bg-surface font-mono text-sm text-parchment transition hover:border-brass hover:text-brass disabled:opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
-                                >
-                                    ← Prev
-                                </button>
-                                <button
-                                    onClick={goNext}
-                                    disabled={atEnd}
-                                    className="flex h-12 flex-1 items-center justify-center rounded-md border border-slate bg-surface font-mono text-sm text-parchment transition hover:border-brass hover:text-brass disabled:opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
-                                >
-                                    Next →
-                                </button>
-                            </div>
-
-                            {recallPly > 0 ? (
-                                <button
-                                    onClick={() => setPhase('recall')}
-                                    className="mt-1 flex h-12 w-full items-center justify-center rounded-md bg-brass font-mono text-sm font-semibold text-navy transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
+                    <div
+                        className="flex w-full flex-col items-center gap-2"
+                        style={{ maxWidth: BOARD_SIZE, minHeight: '9rem' }}
+                    >
+                        {!recallDone && phase === 'study' && (
+                            <>
+                                <div
+                                    className="flex w-full items-center justify-between font-mono text-sm text-muted"
                                     style={{ maxWidth: BOARD_SIZE }}
                                 >
-                                    Resume recall
-                                </button>
-                            ) : (
-                                <button
-                                    onClick={startRecall}
-                                    className="mt-1 flex h-12 w-full items-center justify-center rounded-md bg-brass font-mono text-sm font-semibold text-navy transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
-                                    style={{ maxWidth: BOARD_SIZE }}
-                                >
-                                    Recall from memory
-                                </button>
-                            )}
-                        </>
-                    )}
+                                    <span>{atStart ? 'start' : `move ${moveNumber} · ${lastMove}`}</span>
+                                    <span>{ply} / {fens.length - 1}</span>
+                                </div>
 
-                    {!recallDone && phase === 'recall' && (
-                        <>
-                            <div
-                                className="flex w-full items-center justify-between font-mono text-sm"
-                                style={{ maxWidth: BOARD_SIZE }}
-                            >
-                                <span className="text-muted">{sideToMove} to move</span>
-                                <span className="text-muted">{recallPly} / {fens.length - 1}</span>
-                            </div>
-
-                            <div className="mt-1 flex w-full gap-3" style={{ maxWidth: BOARD_SIZE }}>
-                                <button
-                                    onClick={revealHint}
-                                    className="flex h-12 flex-1 items-center justify-center rounded-md border border-slate bg-surface font-mono text-sm text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
-                                >
-                                    {hintStage === 0 ? 'Hint' : hintStage === 1 ? 'Show move' : 'Hint shown'}
-                                </button>
-                                {mode === 'casual' && (
+                                <div className="flex w-full gap-3" style={{ maxWidth: BOARD_SIZE }}>
                                     <button
-                                        onClick={backToStudy}
-                                        className="flex h-12 flex-1 items-center justify-center rounded-md border border-slate bg-surface font-mono text-sm text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
+                                        onClick={goPrev}
+                                        disabled={atStart}
+                                        className="flex h-12 flex-1 items-center justify-center rounded-md border border-slate bg-surface font-mono text-sm text-parchment transition hover:border-brass hover:text-brass disabled:opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
                                     >
-                                        Back to study
+                                        ← Prev
+                                    </button>
+                                    <button
+                                        onClick={goNext}
+                                        disabled={atEnd}
+                                        className="flex h-12 flex-1 items-center justify-center rounded-md border border-slate bg-surface font-mono text-sm text-parchment transition hover:border-brass hover:text-brass disabled:opacity-30 focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
+                                    >
+                                        Next →
+                                    </button>
+                                </div>
+
+                                {recallPly > 0 ? (
+                                    <button
+                                        onClick={() => setPhase('recall')}
+                                        className="mt-1 flex h-12 w-full items-center justify-center rounded-md bg-brass font-mono text-sm font-semibold text-navy transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
+                                        style={{ maxWidth: BOARD_SIZE }}
+                                    >
+                                        Resume recall
+                                    </button>
+                                ) : (
+                                    <button
+                                        onClick={startRecall}
+                                        className="mt-1 flex h-12 w-full items-center justify-center rounded-md bg-brass font-mono text-sm font-semibold text-navy transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
+                                        style={{ maxWidth: BOARD_SIZE }}
+                                    >
+                                        Recall from memory
                                     </button>
                                 )}
-                            </div>
-                        </>
-                    )}
+                            </>
+                        )}
+
+                        {!recallDone && phase === 'recall' && (
+                            <>
+                                <div
+                                    className="flex w-full items-center justify-between font-mono text-sm"
+                                    style={{ maxWidth: BOARD_SIZE }}
+                                >
+                                    <span className="text-muted">{sideToMove} to move</span>
+                                    <span className="text-muted">{recallPly} / {fens.length - 1}</span>
+                                </div>
+
+                                <div className="mt-1 flex w-full gap-3" style={{ maxWidth: BOARD_SIZE }}>
+                                    <button
+                                        onClick={revealHint}
+                                        className="flex h-12 flex-1 items-center justify-center rounded-md border border-slate bg-surface font-mono text-sm text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
+                                    >
+                                        {hintStage === 0 ? 'Hint' : hintStage === 1 ? 'Show move' : 'Hint shown'}
+                                    </button>
+                                    {mode === 'casual' && (
+                                        <button
+                                            onClick={backToStudy}
+                                            className="flex h-12 flex-1 items-center justify-center rounded-md border border-slate bg-surface font-mono text-sm text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
+                                        >
+                                            Back to study
+                                        </button>
+                                    )}
+                                </div>
+                            </>
+                        )}
+                    </div>
                 </div>
+
 
                 {recallDone && result && (
                     <div className="mt-2 flex w-full max-w-md flex-col rounded-lg bg-surface p-5 lg:mt-0 lg:w-80">
@@ -604,9 +652,6 @@ function RecallSession() {
                     </p>
                     <p>
                         Both track your first-try accuracy and save it to your stats, tagged by mode, so you can see how the two compare. A move counts as first-try if you play it correctly with no wrong attempts or hints.
-                    </p>
-                    <p className="font-mono text-xs">
-                        Switch modes with <span className="text-parchment">?mode=hard</span> in the URL for now. A proper menu is coming.
                     </p>
                 </div>
             </Modal>
