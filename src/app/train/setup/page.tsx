@@ -144,10 +144,10 @@ export default function TrainSetupPage() {
 
             <button
                 onClick={handleStart}
-                className="animate-fade mt-10 flex h-12 w-full max-w-xs cursor-pointer items-center justify-center rounded-md bg-brass px-8 font-mono text-sm font-semibold text-navy transition duration-200 hover:shadow-lg hover:shadow-brass/20 hover:ring-2 hover:ring-brass/60 hover:ring-offset-2 hover:ring-offset-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
+                className="animate-fade mt-10 flex h-12 w-full max-w-xs cursor-pointer items-center justify-center rounded-md bg-brass px-8 font-mono text-sm font-bold text-navy transition duration-200 hover:shadow-lg hover:shadow-brass/20 hover:ring-2 hover:ring-brass/60 hover:ring-offset-2 hover:ring-offset-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
                 style={{ animationDelay: '200ms' }}
             >
-                Start training
+                Start Training
             </button>
 
             <Link

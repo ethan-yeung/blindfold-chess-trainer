@@ -18,7 +18,7 @@ export default function HomePage() {
                 Train your chess memory and visualization.
             </p>
 
-            <div className="animate-fade mt-10 flex w-full justify-center" style={{ animationDelay: '150ms' }}>
+            <div className="animate-fade mt-7 flex w-full justify-center" style={{ animationDelay: '150ms' }}>
                 <ModeCarousel />
             </div>
 
@@ -27,7 +27,7 @@ export default function HomePage() {
                 className="animate-fade mt-8 inline-flex h-12 w-full max-w-xs items-center justify-center rounded-md border border-slate bg-surface px-6 font-mono font-bold text-sm text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass"
                 style={{ animationDelay: '230ms' }}
             >
-                Stats
+                View Stats
             </Link>
         </main>
     );

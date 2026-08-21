@@ -109,7 +109,7 @@ function RecallPreview({ active }: { active: boolean }) {
         if (!active) return;
         const id = setInterval(() => {
             setI((n) => (n >= fens.length - 1 ? 0 : n + 1));
-        }, 900);
+        }, 500);
         return () => clearInterval(id);
     }, [active, fens.length]);
 
