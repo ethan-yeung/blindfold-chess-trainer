@@ -29,7 +29,7 @@ function Section({
 }) {
     return (
         <div
-            className={`animate-rise flex w-full flex-col ${grow ? 'flex-1' : ''}`}
+            className={`animate-fade flex w-full flex-col ${grow ? 'flex-1' : ''}`}
             style={{ animationDelay: `${delay}ms` }}
         >
             <p className="mb-3 text-center font-mono text-[10px] uppercase tracking-[0.2em] text-parchment sm:text-xs">
@@ -66,22 +66,22 @@ export default function RecallSetupPage() {
         `flex-1 px-3 py-2.5 sm:py-3 ${base(selected)}`;
 
     return (
-        <main className="flex min-h-screen flex-col items-center px-4 pb-16 pt-16 text-center sm:px-6 sm:pt-24">
+        <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12 text-center sm:px-6">
             <h1
-                className="animate-rise font-display text-3xl font-semibold tracking-tight text-parchment sm:text-5xl"
+                className="animate-fade font-display text-3xl font-semibold tracking-tight text-parchment sm:text-5xl"
                 style={{ animationDelay: '0ms' }}
             >
-                Move recall
+                Move Recall
             </h1>
             <p
-                className="animate-rise mt-3 max-w-xl font-body text-sm text-muted sm:mt-4 sm:text-lg"
+                className="animate-fade mt-3 max-w-xl font-body text-sm text-muted sm:mt-4 sm:text-lg"
                 style={{ animationDelay: '90ms' }}
             >
                 Study a real game, then replay it from memory.
             </p>
 
             <div className="mt-10 grid w-full max-w-3xl grid-cols-1 gap-6 text-left sm:mt-12 md:grid-cols-2 md:gap-8">
-                {/* LEFT: number of moves + mode + perspective */}
+            
                 <div className="flex flex-col gap-6">
                     <Section label="Number of moves" delay={150}>
                         <div className="grid grid-cols-3 gap-2">
@@ -114,7 +114,7 @@ export default function RecallSetupPage() {
                     </Section>
                 </div>
 
-                {/* RIGHT: study time + time per move (stretch to match left height) */}
+             
                 <div className="flex flex-col gap-6">
                     <Section label="Study time" delay={190} grow>
                         <div className="grid h-full grid-cols-3 grid-rows-2 gap-2">
@@ -140,14 +140,14 @@ export default function RecallSetupPage() {
 
             <button
                 onClick={handleStart}
-                className="animate-rise mt-10 flex h-12 w-full max-w-xs items-center justify-center rounded-md bg-brass px-8 font-mono text-sm font-semibold text-navy transition duration-200 hover:shadow-lg hover:shadow-brass/20 hover:ring-2 hover:ring-brass/60 hover:ring-offset-2 hover:ring-offset-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment sm:mt-12"
+                className="animate-fade mt-10 flex h-12 w-full max-w-xs items-center justify-center rounded-md bg-brass px-8 font-mono text-sm font-semibold text-navy transition duration-200 hover:shadow-lg hover:shadow-brass/20 hover:ring-2 hover:ring-brass/60 hover:ring-offset-2 hover:ring-offset-navy focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment sm:mt-12"
                 style={{ animationDelay: '350ms' }}
             >
                 Start recall
             </button>
             <Link
                 href="/"
-                className="animate-rise mt-3 inline-flex h-12 w-full max-w-xs items-center justify-center rounded-md border border-slate bg-surface px-6 font-mono text-sm text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass sm:mt-4"
+                className="animate-fade mt-3 inline-flex h-12 w-full max-w-xs items-center justify-center rounded-md border border-slate bg-surface px-6 font-mono text-sm text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass sm:mt-4"
                 style={{ animationDelay: '390ms' }}
             >
                 ← Home
