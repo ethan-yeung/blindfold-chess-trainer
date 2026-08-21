@@ -578,7 +578,7 @@ function RecallSession() {
                                         className="mt-1 flex h-12 w-full items-center justify-center rounded-md bg-brass font-mono text-sm font-semibold text-navy transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
                                         style={{ maxWidth: BOARD_SIZE }}
                                     >
-                                        Recall from memory
+                                        Recall From Memory
                                     </button>
                                 )}
                             </>

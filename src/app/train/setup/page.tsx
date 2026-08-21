@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import Link from 'next/link';
+import InfoModal from '@/components/InfoModal';
 
 const TIME_LIMITS = [3, 5, 10, 15, 30, 45, 60, null];
 
@@ -15,6 +16,7 @@ export default function TrainSetupPage() {
     const [single, setSingle] = useState(14);
     const [range, setRange] = useState<[number, number]>([9, 18]);
     const [orientation, setOrientation] = useState<'white' | 'black'>('white');
+    const [infoOpen, setInfoOpen] = useState(false);
 
     function handleStart() {
         const limitParam = timeLimit === null ? 'unlimited' : String(timeLimit);
@@ -23,7 +25,14 @@ export default function TrainSetupPage() {
     }
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12 text-center sm:px-6">
+        <main className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 text-center sm:px-6">
+            <button
+                onClick={() => setInfoOpen(true)}
+                aria-label="How it works"
+                className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-md border border-slate bg-surface font-mono text-lg text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass sm:right-6 sm:top-6"
+            >
+                ?
+            </button>
             <h1
                 className="animate-fade font-display text-3xl font-semibold tracking-tight text-parchment sm:text-5xl"
                 style={{ animationDelay: '0ms' }}
@@ -157,6 +166,7 @@ export default function TrainSetupPage() {
             >
                 ← Home
             </Link>
+            <InfoModal open={infoOpen} onClose={() => setInfoOpen(false)} />
         </main>
     );
 }

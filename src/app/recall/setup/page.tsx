@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Modal from '@/components/Modal';
 
 const TIERS = [
     { name: 'Super quick', label: 'Super Quick', desc: '4–9' },
@@ -47,6 +48,7 @@ export default function RecallSetupPage() {
     const [study, setStudy] = useState<number | 'endless'>(30);
     const [permove, setPermove] = useState<number | 'endless'>('endless');
     const [orientation, setOrientation] = useState<'white' | 'black'>('white');
+    const [infoOpen, setInfoOpen] = useState(false);
 
     function handleStart() {
         const tierParam = encodeURIComponent(tier);
@@ -66,7 +68,14 @@ export default function RecallSetupPage() {
         `flex-1 px-3 py-2.5 sm:py-3 ${base(selected)}`;
 
     return (
-        <main className="flex min-h-screen flex-col items-center justify-center px-4 py-12 text-center sm:px-6">
+        <main className="relative flex min-h-screen flex-col items-center justify-center px-4 py-12 text-center sm:px-6">
+            <button
+                onClick={() => setInfoOpen(true)}
+                aria-label="About these settings"
+                className="absolute right-4 top-4 flex h-10 w-10 items-center justify-center rounded-md border border-slate bg-surface font-mono text-lg text-parchment transition hover:border-brass hover:text-brass focus:outline-none focus-visible:ring-2 focus-visible:ring-brass sm:right-6 sm:top-6"
+            >
+                ?
+            </button>
             <h1
                 className="animate-fade font-display text-3xl font-semibold tracking-tight text-parchment sm:text-5xl"
                 style={{ animationDelay: '0ms' }}
@@ -81,7 +90,7 @@ export default function RecallSetupPage() {
             </p>
 
             <div className="mt-10 grid w-full max-w-3xl grid-cols-1 gap-6 text-left sm:mt-12 md:grid-cols-2 md:gap-8">
-            
+
                 <div className="flex flex-col gap-6">
                     <Section label="Number of moves" delay={150}>
                         <div className="grid grid-cols-3 gap-2">
@@ -114,7 +123,7 @@ export default function RecallSetupPage() {
                     </Section>
                 </div>
 
-             
+
                 <div className="flex flex-col gap-6">
                     <Section label="Study time" delay={190} grow>
                         <div className="grid h-full grid-cols-3 grid-rows-2 gap-2">
@@ -152,6 +161,28 @@ export default function RecallSetupPage() {
             >
                 ← Home
             </Link>
+            <Modal open={infoOpen} onClose={() => setInfoOpen(false)} title="Move recall settings">
+                <div className="space-y-4 text-sm text-muted">
+                    <p>
+                        <span className="text-parchment">Number of moves.</span> How long the game is. One move counts as a move from white + a move from black.
+                    </p>
+                    <p>
+                        <span className="text-parchment">Study time.</span> How long you get to watch the game before recall starts.
+                    </p>
+                    <p>
+                        <span className="text-parchment">Time per move.</span> A clock on each move during recall. Running out costs you first-try credit for that move, but the clock resets and you keep trying.
+                    </p>
+                    <p>
+                        <span className="text-parchment">Mode.</span> Casual lets you drop back to study any time and pick up where you left off, no returning to study for Hard mode.
+                    </p>
+                    <p>
+                        <span className="text-parchment">Perspective.</span> Which side of the board you view from.
+                    </p>
+                    <p className="text-xs">
+                        A move counts as first-try if you play it correctly with no wrong attempts, hints, or timeout.
+                    </p>
+                </div>
+            </Modal>
         </main>
     );
 }
