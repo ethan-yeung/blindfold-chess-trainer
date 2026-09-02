@@ -81,7 +81,7 @@ function MemorizePreview({ active }: { active: boolean }) {
     );
 
     return (
-        <div className="pointer-events-none w-[280px] md:w-[340px] lg:w-[400px]">
+        <div className="pointer-events-none w-[200px] sm:w-[260px] md:w-[340px] lg:w-[400px]">
             <ChessboardProvider options={{ ...boardOptions(position as never), id: 'preview-memorize' }}>
                 <Chessboard />
             </ChessboardProvider>
@@ -114,7 +114,7 @@ function RecallPreview({ active }: { active: boolean }) {
     }, [active, fens.length]);
 
     return (
-        <div className="pointer-events-none w-[280px] md:w-[340px] lg:w-[400px]">
+        <div className="pointer-events-none w-[200px] sm:w-[260px] md:w-[340px] lg:w-[400px]">
             <ChessboardProvider options={{ ...boardOptions(fens[i]), id: 'preview-recall' }}>
                 <Chessboard />
             </ChessboardProvider>
