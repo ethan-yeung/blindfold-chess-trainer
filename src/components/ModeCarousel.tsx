@@ -53,7 +53,7 @@ const boardOptions = (position: string) => ({
 });
 
 function MemorizePreview({ active }: { active: boolean }) {
-    const fen = useMemo(() => DEMO_POSITIONS[Math.floor(Math.random() * DEMO_POSITIONS.length)], []);
+    const [fen, setFen] = useState(DEMO_POSITIONS[0]);
 
     const pieces = useMemo(() => {
         const board = new Chess(fen).board();
@@ -90,8 +90,12 @@ function MemorizePreview({ active }: { active: boolean }) {
 }
 
 function RecallPreview({ active }: { active: boolean }) {
+    const [pgn, setPgn] = useState(DEMO_GAMES[0]);
+    useEffect(() => {
+        setPgn(DEMO_GAMES[Math.floor(Math.random() * DEMO_GAMES.length)]);
+    }, []);
+
     const fens = useMemo(() => {
-        const pgn = DEMO_GAMES[Math.floor(Math.random() * DEMO_GAMES.length)];
         const g = new Chess();
         g.loadPgn(pgn);
         const replay = new Chess();
@@ -101,7 +105,7 @@ function RecallPreview({ active }: { active: boolean }) {
             out.push(replay.fen());
         }
         return out;
-    }, []);
+    }, [pgn]);
 
     const [i, setI] = useState(0);
 
@@ -122,6 +126,88 @@ function RecallPreview({ active }: { active: boolean }) {
     );
 }
 
+function EloPreview({ active }: { active: boolean }) {
+    const [fen, setFen] = useState(DEMO_POSITIONS[0]);
+    const [value, setValue] = useState(1600);
+    const [settled, setSettled] = useState(false);
+
+   
+
+    useEffect(() => {
+        if (!active) return;
+        let alive = true;
+
+        const run = () => {
+            if (!alive) return;
+            setFen(DEMO_POSITIONS[Math.floor(Math.random() * DEMO_POSITIONS.length)]);
+            setSettled(false);
+            const next = 1000 + Math.floor(Math.random() * 60) * 25;
+            const start = performance.now();
+            let from = 0;
+            setValue((v) => {
+                from = v;
+                return v;
+            });
+            const step = (now: number) => {
+                if (!alive) return;
+                const t = Math.min(1, (now - start) / 1400);
+                const eased = 1 - Math.pow(1 - t, 3);
+                setValue(Math.round((from + (next - from) * eased) / 25) * 25);
+                if (t < 1) requestAnimationFrame(step);
+                else {
+                    setSettled(true);
+                    setTimeout(run, 1800);
+                }
+            };
+            requestAnimationFrame(step);
+        };
+
+        const id = setTimeout(run, 400);
+        return () => {
+            alive = false;
+            clearTimeout(id);
+        };
+    }, [active]);
+
+    const pct = ((value - 1000) / 1500) * 100;
+
+    return (
+        <div className="pointer-events-none relative w-[200px] sm:w-[260px] md:w-[340px] lg:w-[400px]">
+            <ChessboardProvider options={{ ...boardOptions(fen), id: 'preview-elo', showAnimations: false }}>
+                <Chessboard />
+            </ChessboardProvider>
+
+            <div
+                className="absolute inset-x-0 bottom-0 rounded-b px-3 pb-2 pt-6"
+                style={{
+                    background: 'linear-gradient(to top, rgba(13,27,42,0.92) 55%, rgba(13,27,42,0))',
+                }}
+            >
+                <div className="relative h-1.5 w-full rounded-full bg-slate">
+                    <div
+                        className="absolute top-0 h-1.5 rounded-full"
+                        style={{ width: `${pct}%`, backgroundColor: 'var(--color-brass)' }}
+                    />
+                    <div
+                        className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2"
+                        style={{
+                            left: `${pct}%`,
+                            borderColor: 'var(--color-brass)',
+                            backgroundColor: 'var(--color-parchment)',
+                        }}
+                    />
+                </div>
+                <p
+                    className="mt-1.5 text-center font-mono text-sm font-semibold transition-colors duration-300"
+                    style={{ color: settled ? 'var(--color-board-green)' : 'var(--color-parchment)' }}
+                >
+                    {value}
+                </p>
+            </div>
+        </div>
+    );
+}
+
 const MODES = [
     {
         name: 'Memorize Position',
@@ -133,6 +219,11 @@ const MODES = [
         blurb: 'Watch a real game, then replay it from memory.',
         href: '/recall/setup',
     },
+    {
+        name: 'Guess the Elo',
+        blurb: 'Watch a real game and guess how strong the players are.',
+        href: '/elo',
+    },
 ];
 
 export default function ModeCarousel() {
@@ -140,6 +231,7 @@ export default function ModeCarousel() {
     const [offset, setOffset] = useState(0);
     const [sliding, setSliding] = useState(false);
     const touchStart = useRef<number | null>(null);
+    const rowRef = useRef<HTMLDivElement>(null);
 
     const go = (dir: 1 | -1) => {
         if (sliding) return;
@@ -172,7 +264,9 @@ export default function ModeCarousel() {
                 <div className="flex flex-col items-center gap-5">
                     {modeIdx === 0
                         ? <MemorizePreview active={isActive(n)} />
-                        : <RecallPreview active={isActive(n)} />}
+                        : modeIdx === 1
+                            ? <RecallPreview active={isActive(n)} />
+                            : <EloPreview active={isActive(n)} />}
                     <div className="text-center">
                         <p className="font-display text-2xl font-semibold text-parchment sm:text-3xl lg:text-4xl">{m.name}</p>
                         <p className="mt-1.5 font-body text-sm text-muted sm:text-base">{m.blurb}</p>
@@ -204,6 +298,7 @@ export default function ModeCarousel() {
                     }}
                 >
                     <div
+                        ref={rowRef}
                         className={`flex ${sliding ? 'transition-transform duration-300 ease-out' : ''}`}
                         style={{ transform: `translateX(calc(-100% - ${offset * 100}%))` }}
                     >
