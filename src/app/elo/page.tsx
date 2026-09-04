@@ -7,6 +7,7 @@ import Slider from 'rc-slider';
 import 'rc-slider/assets/index.css';
 import Link from 'next/link';
 import Modal from '@/components/Modal';
+import { buildEloAttempt, saveEloAttempt } from '@/lib/elo-history';
 
 const BOARD_SIZE = 'min(88vw, 62vh, 500px)';
 const MIN_GUESS = 1000;
@@ -314,7 +315,10 @@ export default function EloPage() {
                     <div className="mt-2 flex w-full flex-col items-center gap-2" style={{ maxWidth: BOARD_SIZE, minHeight: '5.5rem' }}>
                         {!revealed ? (
                             <button
-                                onClick={() => setRevealed(true)}
+                                onClick={() => {
+                                    saveEloAttempt(buildEloAttempt(guess, actual, scoreGuess(guess, actual)));
+                                    setRevealed(true);
+                                }}
                                 className="flex h-12 w-full items-center justify-center rounded-md bg-brass font-mono text-sm font-bold text-navy transition hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-parchment"
                             >
                                 Guess
